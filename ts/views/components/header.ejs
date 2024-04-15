@@ -1,0 +1,24 @@
+<header>
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/contact">Contact</a>
+        <% if(!isConnected) { %>
+            <a href="/signin">Connexion</a>
+        <% } else { %>
+            <% if(roleConnected === 1) { %>
+                <a href="/admin">Admin</a>
+            <% } %>
+            
+            <button class="logout">Déconnexion</button>
+        <% } %>
+    </nav>
+
+    <dialog>
+        <button class="closeModal buttonX">X</button>
+        <h2>Êtes-vous sûr de vouloir vous déconnecter ?</h2>
+        <form action="/logout" method="POST">
+            <button class="closeModal cancel">Annuler</button>
+            <button class="confirmLogout">Confirmer</button>
+        </form>
+    </dialog>
+</header>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/images/ts.png" type="image/x-icon">
+    <link rel="stylesheet" href="/styles/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <%- include('../../components/header.ejs') %>
+    <main>
+        <% if (user) { %>
+            <h1>Détails de <%= user.lastname %> <%= user.firstname %></h1>
+            <a href="/users">Listes des utilisateurs</a>
+            <a href="/users/<%= user._id %>/update">Modifier</a>
+            <ul>
+                <li>Nom : <%= user.lastname ? user.lastname : "" %></li>
+                <li>Prénom : <%= user.firstname ? user.firstname : "" %></li>
+                <li>Email : <%= user.email %></li>
+                <li>Adresse : </li>
+                <ul>
+                    <li>N° et Nom de voie : <%= user.address.street ? user.address.street : "" %></li>
+                    <li>Code Postal : <%= user.address.zipcode ? user.address.zipcode : "" %></li>
+                    <li>Commune : <%= user.address.city ? user.address.city : "" %></li>
+                </ul>
+            </ul>
+            <% } %>
+    </main>
+    <%- include('../../components/footer.ejs') %>
+    <script src="/scripts/app.js"></script>
+    <script src="/scripts/users.js"></script>
+</body>
+</html>

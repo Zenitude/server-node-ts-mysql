@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/images/ts.png" type="image/x-icon">
+    <link rel="stylesheet" href="/styles/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <%- include('../../components/header.ejs') %>
+   <main>
+       
+       
+        <h1>Création d'un utilisateur</h1>
+        <a href="/users">Liste des utilisateurs</a>
+        <form class="create-user" action="/users/create" method="POST">
+            <div>
+               <label for="lastname">Nom</label>
+               <input type="text" id="lastname" name="lastname" autocomplete="off">
+            </div>
+            <div>
+                <label for="firstname">Prénom</label>
+                <input type="text" id="firstname" name="firstname" autocomplete="off">
+             </div>
+             <div>
+               <label for="email">Email*</label>
+               <input type="email" id="email" name="email" required autocomplete="off">
+            </div>
+            <div>
+               <label for="password">Mot de passe*</label>
+               <input type="password" id="password" name="password" required autocomplete="off">
+            </div>
+            <div>
+               <label for="confirm">Confirmation Mot de passe*</label>
+               <input type="password" id="confirm" name="confirm" required autocomplete="off">
+            </div>
+             <div>
+                <label for="street">N° et Nom de voie</label>
+                <input type="text" id="street" name="street" autocomplete="off">
+             </div>
+             <div>
+                <label for="zipcode">Code postal</label>
+                <input type="text" id="zipcode" name="zipcode" minlength="5" maxlength="5" autocomplete="off">
+             </div>
+             <div>
+                <label for="city">Ville</label>
+                <input type="text" id="city" name="city" autocomplete="off">
+             </div>
+             <div>
+               <label for="role">Role</label>
+               <select name="role" id="role">
+                  <option value="0" selected>Membre</option>
+                  <option value="1">Admin</option>
+               </select>
+            </div>
+             <button>Créer</button>
+        </form>
+        <p>* Champs obligatoires</p>
+   </main>
+   <%- include('../../components/footer.ejs') %>
+   <script src="/scripts/app.js"></script>
+   <script src="/scripts/users.js"></script>
+</body>
+</html>

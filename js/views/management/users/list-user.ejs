@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/images/ts.png" type="image/x-icon">
+    <link rel="stylesheet" href="/styles/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <%- include('../../components/header.ejs') %>
+    <main>
+        <h1>Liste des utilisateurs</h1>
+        <a href="/users/create">Ajouter un utilisateur</a>       
+        <table class="list-user">
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Adresse</th>
+                <th colspan="2">Actions</th>
+            </tr>
+            <% if(users) { %>
+                <% users.forEach(user => { %>
+                    <tr>
+                        <td><%= user.lastname ? user.lastname : "" %></td>
+                        <td><%= user.firstname ? user.firstname : "" %>
+                        </td>
+                        <td><%= user.email %></td>
+                        <% if(user.address) { %>
+                            <td><%= user.address.street %> <br> <%= user.address.zipcode %> <%= user.address.city %></td>    
+                        <% } else { %>
+                            <td></td>
+                        <% } %>
+                        <td><a href="/users/<%= user._id %>">Détails</a></td>
+                        <td><a href="/users/<%= user._id %>/update">Modifier</a></td>
+                        <td><a href="/users/<%= user._id %>/delete">Supprimer</a></td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5">Aucun utilisateur référencé pour le moment</td>
+                </tr>
+            <% } %>
+        </table>
+    </main>
+    <%- include('../../components/footer.ejs') %>
+    <script src="/scripts/app.js"></script>
+    <script src="/scripts/users.js"></script>
+</body>
+</html>

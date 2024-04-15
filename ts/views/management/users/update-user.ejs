@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/images/ts.png" type="image/x-icon">
+    <link rel="stylesheet" href="/styles/style.css">
+    <title>Document</title>
+</head>
+<body>
+    <%- include('../../components/header.ejs') %>
+    <main>
+        <% const zipcode = (user.address && user.address.zipcode) ? ((user.address.zipcode).length > 5 ? `0${user.address.zipcode}` : `${user.address.zipcode}`) : "" %>
+        <h1>Mise à jour d'un utilisateur</h1>
+        <form class="update-user" action="/users/<%= user._id %>/update" method="POST">
+            <div>
+                <label for="lastname">Nom</label>
+                <input type="text" id="lastname" name="lastname" value="<%= user.lastname ? user.lastname : '' %>"> 
+            </div>
+            <div>
+                <label for="firstname">Prénom</label>
+                <input type="text" id="firstname" name="firstname" value="<%= user.firstname ? user.firstname : '' %>"> 
+            </div>
+            <div>
+                <label for="email">Email*</label>
+                <input type="email" id="email" name="email" value="<%= user ? user.email : '' %>" required> 
+            </div>
+            <div>
+                <label for="street">N° et Nom de voie</label>
+                <input type="text" id="street" name="street" value="<%= (user.address && user.address.street) ? user.address.street : '' %>"> 
+            </div>
+            <div>
+                <label for="zipcode">Code postal</label>
+                <input type="text" id="zipcode" name="zipcode" minlength="5" maxlength="5" value="<%= (user.address && user.address.zipcode) ? zipcode : '' %>"> 
+            </div>
+            <div>
+                <label for="city">Ville</label>
+                <input type="text" id="city" name="city" value="<%= (user.address && user.address.city) ? user.address.city : '' %>"> 
+            </div>
+            <div>
+                <label for="role">Rôle</label>
+                <select name="role" id="role">
+                    <option value="0" <%= user.role === 0 ? 'selected' : '' %>>Normal</option>
+                    <option value="1" <%= user.role === 1 ? 'selected' : '' %>>Admin</option>
+                </select>
+            </div>
+            <button>Modifier</button>
+        </form>
+    </main>
+    <%- include('../../components/footer.ejs') %>
+    <script src="/scripts/app.js"></script>
+    <script src="/scripts/users.js"></script>
+</body>
+</html>

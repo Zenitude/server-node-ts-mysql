@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const sign_controller_1 = require("../controllers/sign_controller");
+const getToken_1 = require("../utils/middlewares/management/getToken");
+const getRole_1 = require("../utils/middlewares/management/getRole");
+const router = (0, express_1.Router)();
+router.get('/signin', getToken_1.getToken, getRole_1.getRole, sign_controller_1.signin);
+router.post('/signin', getToken_1.getToken, getRole_1.getRole, sign_controller_1.signin);
+router.get('/signup', getToken_1.getToken, getRole_1.getRole, sign_controller_1.signup);
+router.post('/signup', getToken_1.getToken, getRole_1.getRole, sign_controller_1.signup);
+router.post('/logout', sign_controller_1.logout);
+exports.default = router;
