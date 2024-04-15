@@ -14,10 +14,6 @@ REST API made with Node Express MongoDb and TypeScript
 PORT=  
 HOST=  
 
-> \# Nodemailer  
-EMAIL_USER=  
-EMAIL_PSWD= 
-
 > \# MongoDB  
 URL_DATABASE=  
 
