@@ -27,14 +27,14 @@
                         <td><%= user.firstname ? user.firstname : "" %>
                         </td>
                         <td><%= user.email %></td>
-                        <% if(user.address) { %>
-                            <td><%= user.address.street %> <br> <%= user.address.zipcode %> <%= user.address.city %></td>    
+                        <% if(user.address && user.street !== "NULL") { %>
+                            <td><%= user.street %> <br> <%= user.zipcode %> <%= user.city %></td>    
                         <% } else { %>
                             <td></td>
                         <% } %>
-                        <td><a href="/users/<%= user._id %>">Détails</a></td>
-                        <td><a href="/users/<%= user._id %>/update">Modifier</a></td>
-                        <td><a href="/users/<%= user._id %>/delete">Supprimer</a></td>
+                        <td><a href="/users/<%= user.id_user %>">Détails</a></td>
+                        <td><a href="/users/<%= user.id_user %>/update">Modifier</a></td>
+                        <td><a href="/users/<%= user.id_user %>/delete">Supprimer</a></td>
                     </tr>
                 <% }) %>
             <% } else { %>

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { sendView } from "../../functions/sendView";
-import User from "../../../models/User";
+import { connectMySQL } from "../../database/mysql";
 import { join } from "path";
 import { CustomType } from "../../types/types";
 
@@ -8,27 +7,48 @@ export const getRole = (req: Request, res: Response, next: NextFunction) => {
     const session = req.session as CustomType;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? false;
+    const connection = connectMySQL();
 
     try {
         const token = session.decodedToken ?? false;
-
         if (!token) { 
-            throw new Error(`Error User not found`);
+            session.isConnected = false;
+            res.locals.roleUser = 0;
+            next(); 
         }
         else {
-            if(!token.userId) { throw new Error(`Erreur Token userId`)}
+            connection.then(mysql => {
+                mysql?.query(
+                    `SELECT * FROM users WHERE id_user = ?`,
+                    [token.userId],
+                    (error, result) => {
+                        if(error) { throw new Error(`${error}`)}
+                        const results = Object.entries(result);
+
+                        if(results) {
+                            const user = results.map(el => el[1])[0];
+                            res.locals.roleUser = user.role;
+                            next();
+                        } else {
+                            session.isConnected = false;
+                            res.locals.roleUser = 0;
+                            next();
+                        }
+                    }
+                )
+            })
             
-            User.findOne({_id: token.userId})
-            .then(user => {
-                if(user) {
-                    res.locals.roleUser = user.role;
-                    next();
-                } else {
-                    throw new Error(`Error User not found`);
-                }
-            }).catch(error => { 
-                throw new Error(`Error find User GetRole : ${error}`)
-            });
+            // User.findOne({_id: token.userId})
+            // .then(user => {
+            //     if(user) {
+            //         res.locals.roleUser = user.role;
+            //         next();
+            //     } else {
+            //         throw new Error(`Error User not found`);
+            //     }
+            // }).catch(error => { 
+            //     throw new Error(`Error find User GetRole : ${error}`)
+            // });
         }
     } catch(error) {
         console.log(`${error}`);

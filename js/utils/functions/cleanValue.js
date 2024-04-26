@@ -5,7 +5,7 @@ const validator_1 = require("validator");
 const cleanValue = (value) => {
     if (!value)
         return "";
-    const str = value.trim();
+    const str = typeof value === 'string' ? value.trim() : value.toString().trim();
     const escValue = (0, validator_1.escape)(str);
     const finalValue = escValue.replace(/<[^>]*>/g, '')
         .replace(/&lt;/g, '') // remplace <

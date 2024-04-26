@@ -14,7 +14,7 @@ router.get("/users", getToken_1.getToken, getRole_1.getRole, users_controller_1.
 router.get("/users/:id", getToken_1.getToken, getRole_1.getRole, getUserById_1.getUserById, users_controller_1.details);
 /* Update */
 router.get("/users/:id/update", getToken_1.getToken, getRole_1.getRole, getUserById_1.getUserById, users_controller_1.update);
-router.put("/users/:id/update", getToken_1.getToken, getRole_1.getRole, users_controller_1.update);
+router.put("/users/:id/update", getToken_1.getToken, getRole_1.getRole, getUserById_1.getUserById, users_controller_1.update);
 /* Delete */
 router.get("/users/:id/delete", getToken_1.getToken, getRole_1.getRole, getUserById_1.getUserById, users_controller_1.remove);
 router.delete("/users/:id/delete", getToken_1.getToken, getRole_1.getRole, getUserById_1.getUserById, users_controller_1.remove);

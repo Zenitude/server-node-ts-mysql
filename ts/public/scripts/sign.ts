@@ -33,6 +33,15 @@ if(formSignup) {
             window.location.href = datas.url;
         })
     })
+
+    const message = {
+        type: window.localStorage.getItem('typeMessage') ?? '',
+        text: window.localStorage.getItem('textMessage') ?? ''
+    }
+    
+    if(message.text && message.text.trim() !== '') {
+        displayMessage(message, formSignup);
+    }
 }
 
 const formSignin = document.querySelector('.signin') as HTMLFormElement;
@@ -64,4 +73,13 @@ if(formSignin) {
             window.location.href = datas.url
         })
     })
+
+    const message = {
+        type: window.localStorage.getItem('typeMessage') ?? '',
+        text: window.localStorage.getItem('textMessage') ?? ''
+    }
+    
+    if(message.text && message.text.trim() !== '') {
+        displayMessage(message, formSignin);
+    }
 }

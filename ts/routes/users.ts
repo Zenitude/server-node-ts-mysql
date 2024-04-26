@@ -15,7 +15,7 @@ router.get("/users/:id", getToken, getRole, getUserById, details);
 
 /* Update */
 router.get("/users/:id/update", getToken, getRole, getUserById, update);
-router.put("/users/:id/update", getToken, getRole, update);
+router.put("/users/:id/update", getToken, getRole, getUserById, update);
 
 /* Delete */
 router.get("/users/:id/delete", getToken, getRole, getUserById, remove);

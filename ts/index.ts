@@ -1,13 +1,12 @@
 /* Import */
 import express, { json, urlencoded } from "express";
+import { connectMySQL } from "./utils/database/mysql";
 import { join } from "path";
 import { config } from 'dotenv';
-import { dateMiddleware } from "./utils/middlewares/date";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { routes } from "./routes/routes";
-import { connectMongo } from './utils/database/mongodb';
 import helmet from "helmet";
 
 /* Config Server */
@@ -15,31 +14,26 @@ const app = express();
 config();
 
 /* Connect Database */
-connectMongo();
+connectMySQL().then(mysql => {
+    mysql!.getConnection((error) => {
+        if(error) { throw new Error(`Error Connection Database : ${error}`); } 
+        else { console.log(`Connection Database SQL Success`); }
+    })
+})
 
-/* Middlewares */
-
-
-//app.use(urlencoded({extended: true}))
 app.use(json())
-// app.use(helmet({
-//     contentSecurityPolicy: {
-//         directives: {
-//             formAction: ["'self'", "http://localhost"],
-//             styleSrc : ["'self'"],
-//             scriptSrc: ["'self'", "http://localhost"]
-// 		}
-//     },
-//     strictTransportSecurity: {
-//         maxAge: 0,
-//         includeSubDomains: false,
-//         preload: false
-//        },
-//     crossOriginOpenerPolicy: { policy: "unsafe-none" },
-//     crossOriginResourcePolicy: false,
-//     originAgentCluster: false,
-//     xContentTypeOptions: true
-// }));
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            styleSrc : ["'self'"],
+		}
+    },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    crossOriginResourcePolicy: false,
+    originAgentCluster: false,
+    xContentTypeOptions: true
+}));
+
 app.use(cookieParser());
 app.use(session({
     secret: process.env.SECRET_KEY_SESSION as string,
@@ -47,7 +41,6 @@ app.use(session({
     saveUninitialized: false
 }))
 
-app.use(dateMiddleware);
 app.use(morgan('dev'));
 
 /* Static Folder/File */

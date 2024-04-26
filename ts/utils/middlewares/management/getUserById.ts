@@ -1,23 +1,34 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../../../models/User";
+import { connectMySQL } from "../../database/mysql";
 import { cleanValue } from "../../functions/cleanValue";
 import { CustomType } from "../../types/types";
-import { join } from "path";
 import { sendView } from "../../functions/sendView";
 
 export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const session = req.session as CustomType;
     const isConnected = session.isConnected ?? false ;
     const roleConnected = res.locals.roleUser ?? 0;
-    console.log('id getUserById : ', req.params.id)
+    const connection = connectMySQL();
+
     try{
-        const user = await User.findOne({_id: cleanValue(req.params.id) }).populate('address');
-        if(user) {
-            res.locals.detailsUser = user;
-            next();
-        } else {
-            throw new Error(`user not found`)
-        }
+        connection.then(mysql => {
+            mysql!.query(
+                'SELECT * FROM users FULL JOIN addressusers ON address = id_address WHERE id_user = ?',
+                [cleanValue(req.params.id)],
+                (error, result) => {
+                    if(error) { throw new Error(`${error}`)}
+                    const results = Object.entries(result);
+
+                    if(results) {
+                        const user = results.map(el => el[1])[0];
+                        res.locals.detailsUser = user;
+                        next();
+                    } else {
+                        throw new Error(`user not found`)
+                    }
+                }
+            )
+        })
     } catch(error) {
         console.log(`Error GetUserById : ${error}`);
         sendView(res, 404, "error", { isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text:"Get User"}});

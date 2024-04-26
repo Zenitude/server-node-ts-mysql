@@ -4,81 +4,147 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.remove = exports.update = exports.create = exports.details = exports.list = void 0;
+const mysql_1 = require("../utils/database/mysql");
 const path_1 = require("path");
 const validator_1 = require("validator");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const User_1 = __importDefault(require("../models/User"));
 const verifInput_1 = require("../utils/functions/verifInput");
-const findUserByMail_1 = require("../utils/functions/findUserByMail");
-const createAddress_1 = require("../utils/functions/createAddress");
-const findAddress_1 = require("../utils/functions/findAddress");
 const sendView_1 = require("../utils/functions/sendView");
 const cleanValue_1 = require("../utils/functions/cleanValue");
-const findUsers = async () => {
-    return await User_1.default.find().populate('address');
-};
 const newUser = async (req, res, idAddress) => {
-    const { firstname, lastname, email, password, role } = req.body;
-    const hash = await bcrypt_1.default.hash((0, cleanValue_1.cleanValue)(password), 10);
-    const user = new User_1.default({
-        firstname: (0, cleanValue_1.cleanValue)(firstname),
-        lastname: (0, cleanValue_1.cleanValue)(lastname),
-        email: (0, cleanValue_1.cleanValue)(email),
+    const connection = (0, mysql_1.connectMySQL)();
+    const firstname = (0, cleanValue_1.cleanValue)(req.body.firstname);
+    const lastname = (0, cleanValue_1.cleanValue)(req.body.lastname);
+    const email = (0, cleanValue_1.cleanValue)(req.body.email);
+    const hash = await bcrypt_1.default.hash((0, cleanValue_1.cleanValue)(req.body.password), 10);
+    const role = ((0, validator_1.isNumeric)((0, cleanValue_1.cleanValue)(req.body.role)) && (0, cleanValue_1.cleanValue)(req.body.role).length === 1) ? parseInt((0, cleanValue_1.cleanValue)(req.body.role)) : 0;
+    const user = {
+        firstname: firstname,
+        lastname: lastname,
+        email: email,
         password: hash,
-        address: idAddress && (0, cleanValue_1.cleanValue)(idAddress),
-        role: ((0, validator_1.isNumeric)((0, cleanValue_1.cleanValue)(role)) && (0, cleanValue_1.cleanValue)(role).length === 1) ? parseInt((0, cleanValue_1.cleanValue)(role)) : 0
-    });
-    user.save().then(result => {
-        const message = `Utilisateur ${(result.lastname === '' || result.firstname === '') ? result.email : `${result.firstname} ${result.lastname}`} créé avec succès`;
-        res.status(201).json({ url: '/users/create', message: { type: 'success', text: message } });
-    }).catch(error => {
-        throw new Error(`Erreur Save User : ${error}`);
+        address: idAddress ? (0, cleanValue_1.cleanValue)(idAddress) : 1,
+        role: role
+    };
+    await connection.then(mysql => {
+        if (idAddress) {
+            mysql.query(`INSERT INTO users(lastname, firstname, email, password, role, address) VALUES(?, ?, ?, ?, ?, ?)`, [user.lastname, user.firstname, user.email, user.password, user.role, user.address], (error, result) => {
+                if (error) {
+                    throw new Error(`${error}`);
+                }
+                console.log('sucess create user : ', result);
+                const message = `Utilisateur ${(user.lastname === '' || user.firstname === '') ? user.email : `${user.firstname} ${user.lastname}`} créé avec succès`;
+                res.status(201).json({ url: '/users/create', message: { type: 'success', text: message } });
+            });
+        }
+        else {
+            mysql.query(`INSERT INTO users(lastname, firstname, email, password, role) VALUES(?, ?, ?, ?, ?)`, [user.lastname, user.firstname, user.email, user.password, user.role], (error, result) => {
+                if (error) {
+                    throw new Error(`${error}`);
+                }
+                console.log('sucess create user : ', result);
+                const message = `Utilisateur ${(user.lastname === '' || user.firstname === '') ? user.email : `${user.firstname} ${user.lastname}`} créé avec succès`;
+                res.status(201).json({ url: '/users/create', message: { type: 'success', text: message } });
+            });
+        }
     });
 };
-const refreshUser = async (req, res, user, idAddress) => {
-    const { firstname, lastname, email, role } = await req.body;
-    let updatedUser = {
-        _id: (0, cleanValue_1.cleanValue)(req.params.id),
-        firstname: (0, cleanValue_1.cleanValue)(firstname),
-        lastname: (0, cleanValue_1.cleanValue)(lastname),
-        password: user.password,
-        address: idAddress && idAddress,
-        role: parseInt((0, cleanValue_1.cleanValue)(role))
-    };
-    if (email && user.email !== (0, cleanValue_1.cleanValue)(email)) {
-        updatedUser.email = (0, cleanValue_1.cleanValue)(email);
-    }
-    await User_1.default.updateOne({ _id: (0, cleanValue_1.cleanValue)(req.params.id) }, { ...updatedUser })
-        .then(result => {
-        const message = `Utilisateur ${(updatedUser.lastname === '' || updatedUser.firstname === '') ? updatedUser.email : `${updatedUser.firstname} ${updatedUser.lastname}`} créé avec succès`;
-        res.status(201).json({ url: `/users/${req.params.id}/update`, message: { type: 'success', text: message } });
-    }).catch(error => {
-        console.log(error);
-        throw new Error(`Erreur UpdateOne User : ${error}`);
+const refreshUser = (req, res, user, idAddress) => {
+    const connection = (0, mysql_1.connectMySQL)();
+    const lastname = (0, cleanValue_1.cleanValue)(req.body.lastname);
+    const firstname = (0, cleanValue_1.cleanValue)(req.body.firstname);
+    const role = ((0, validator_1.isNumeric)((0, cleanValue_1.cleanValue)(req.body.role)) && (0, cleanValue_1.cleanValue)(req.body.role).length === 1) ? parseInt((0, cleanValue_1.cleanValue)(req.body.role)) : 0;
+    const address = idAddress ? idAddress : "";
+    console.log('user datas update : ', {
+        id: user.id_user,
+        last: lastname,
+        first: firstname,
+        mail: user.email,
+        role: role,
+        address: address
+    });
+    connection.then(mysql => {
+        if (address !== "") {
+            mysql.query('UPDATE users SET lastname = ?, firstname = ?, email = ?, role = ?, address = ? WHERE id_user = ?', [lastname, firstname, user.email, role, address, user.id_user], (error, result, fields) => {
+                if (error) {
+                    throw new Error(`${error}`);
+                }
+                if (!result) {
+                    throw new Error('Problème requête');
+                }
+                const results = Object.entries(result);
+                console.log(results);
+                console.log('filter : ', results.filter(el => el[0] === 'changedRows'));
+                console.log('map : ', results.filter(el => el[0] === 'changedRows').map(el => el[1]));
+                if (results && results.length > 0) {
+                    const changedRow = results.filter(el => el[0] === 'changedRows').map(el => el[1])[0];
+                    if (changedRow === 1) {
+                        const message = `Utilisateur ${(lastname === '' || firstname === '') ? user.email : `${firstname} ${lastname}`} mise à jour avec succès`;
+                        res.status(201).json({ url: `/users/${user.id_user}/update`, message: { type: 'success', text: message } });
+                    }
+                    else {
+                        res.status(404).json({ url: `/users/${user.id_user}/update`, message: { type: 'error', text: "L'utilisateur n'a pas pu être modifié" } });
+                    }
+                }
+                else {
+                    res.status(401).json({ url: `/users/${user.id_user}/update`, message: { type: 'error', text: "L'utilisateur n'a pas pu être modifié" } });
+                }
+            });
+        }
+        else {
+            mysql.query('UPDATE users SET lastname = ?, firstname = ?, email = ?, role = ? WHERE id_user = ?', [lastname, firstname, user.email, role, user.id_user], (error, result) => {
+                if (error) {
+                    throw new Error(`${error}`);
+                }
+                if (!result) {
+                    throw new Error('Problème requête');
+                }
+                const results = Object.entries(result);
+                if (results && results.length > 0) {
+                    const changedRows = results.filter(el => el[0] === 'changedRows').map(el => el[1])[0];
+                    if (changedRows === 1) {
+                        const message = `Utilisateur ${(lastname === '' || firstname === '') ? user.email : `${firstname} ${lastname}`} mise à jour avec succès`;
+                        res.status(201).json({ url: `/users/${user.id_user}/update`, message: { type: 'success', text: message } });
+                    }
+                    else {
+                        res.status(404).json({ url: `/users/${user.id_user}/update`, message: { type: 'error', text: "L'utilisateur n'a pas pu être modifié" } });
+                    }
+                }
+                else {
+                    res.status(401).json({ url: `/users/${user.id_user}/update`, message: { type: 'error', text: "L'utilisateur n'a pas pu être modifié" } });
+                }
+            });
+        }
     });
 };
 const verifEmail = async (req, res, detailsUser, address) => {
+    const connection = (0, mysql_1.connectMySQL)();
     if (req.body.email && detailsUser.email !== (0, cleanValue_1.cleanValue)(req.body.email)) {
-        await User_1.default.findOne({ email: (0, cleanValue_1.cleanValue)(req.body.email) })
-            .then(emailExist => {
-            if (emailExist) {
-                const message = "L'email saisie existe déjà dans la base de données";
-                res.status(200).json({ url: `/users/${req.params.id}/update`, message: { type: 'error', text: message } });
-            }
-            else {
-                if (address) {
-                    refreshUser(req, res, detailsUser, address._id);
+        await connection.then(mysql => {
+            mysql.query('SELECT * FROM users WHERE email = ?', [(0, cleanValue_1.cleanValue)(req.body.email)], (error, result) => {
+                if (error) {
+                    throw new Error(`${error}`);
+                }
+                const results = Object.entries(result);
+                if (results && results.length > 0) {
+                    const message = "L'email saisie existe déjà dans la base de données";
+                    res.status(200).json({ url: `/users/${req.params.id}/update`, message: { type: 'error', text: message } });
                 }
                 else {
-                    refreshUser(req, res, detailsUser);
+                    detailsUser.email = (0, cleanValue_1.cleanValue)(req.body.email);
+                    if (address) {
+                        refreshUser(req, res, detailsUser, address);
+                    }
+                    else {
+                        refreshUser(req, res, detailsUser);
+                    }
                 }
-            }
-        })
-            .catch(error => { throw new Error(`Erreur findUserByMail update user : ${error}`); });
+            });
+        }).catch(error => { throw new Error(`Erreur findUserByMail update user : ${error}`); });
     }
     else {
         if (address) {
-            refreshUser(req, res, detailsUser, address._id);
+            refreshUser(req, res, detailsUser, address);
         }
         else {
             refreshUser(req, res, detailsUser);
@@ -89,16 +155,28 @@ const list = async (req, res) => {
     const session = req.session;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? 0;
+    const connection = (0, mysql_1.connectMySQL)();
     try {
         if (roleConnected !== 1) {
             (0, sendView_1.sendView)(res, 401, "error", { isConnected: isConnected, roleConnected: roleConnected });
         }
         else {
-            await findUsers()
-                .then(users => {
-                (0, sendView_1.sendView)(res, 200, 'list-user', { isConnected: isConnected, roleConnected: roleConnected, users: users });
-            })
-                .catch(error => { throw new Error(`Error findUsers List Users : ${error}`); });
+            await connection.then(mysql => {
+                mysql.query(`SELECT * FROM users FULL JOIN addressusers ON address = id_address`, [], (error, result) => {
+                    if (error) {
+                        throw new Error(`${error}`);
+                    }
+                    const results = Object.entries(result);
+                    if (results) {
+                        const users = results.map(el => el[1]);
+                        (0, sendView_1.sendView)(res, 200, 'list-user', { isConnected: isConnected, roleConnected: roleConnected, users: users });
+                    }
+                    else {
+                        const users = [];
+                        (0, sendView_1.sendView)(res, 200, 'list-user', { isConnected: isConnected, roleConnected: roleConnected, users: users });
+                    }
+                });
+            });
         }
     }
     catch (error) {
@@ -117,6 +195,7 @@ const details = (req, res) => {
         }
         else {
             const user = res.locals.detailsUser ?? false;
+            console.log('details : ', user);
             (0, sendView_1.sendView)(res, 200, 'details-user', { user: user, isConnected: isConnected, roleConnected: roleConnected });
         }
     }
@@ -126,14 +205,15 @@ const details = (req, res) => {
     }
 };
 exports.details = details;
-const create = (req, res) => {
+const create = async (req, res) => {
     const session = req.session;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? 0;
+    const connection = (0, mysql_1.connectMySQL)();
     try {
         if (req.body.email || req.body.lastname || req.body.firstname || req.body.password || req.body.confirm || req.body.street || req.body.zipcode || req.body.city) {
             if (!isConnected || roleConnected !== 1) {
-                (0, sendView_1.sendView)(res, 200, '/');
+                res.status(302).json({ url: '/', message: { type: '', text: '' } });
             }
             if (req.body.email && req.body.password && req.body.confirm) {
                 if (req.body.password === req.body.confirm) {
@@ -152,42 +232,57 @@ const create = (req, res) => {
                     const street = (0, cleanValue_1.cleanValue)(req.body.street);
                     const zipcode = (0, cleanValue_1.cleanValue)(req.body.zipcode);
                     const city = (0, cleanValue_1.cleanValue)(req.body.city);
-                    (0, findUserByMail_1.findUserByMail)(req)
-                        .then(user => {
-                        if (user) {
-                            res.status(401).json({ url: '/users/create', message: { type: "error", text: "Problème lors de la création" } });
-                        }
-                        else {
-                            if (street || zipcode || city) {
-                                if (street && zipcode && city) {
-                                    (0, findAddress_1.findAddress)(req)
-                                        .then(address => {
-                                        if (address) {
-                                            newUser(req, res, address._id);
-                                        }
-                                        else {
-                                            (0, createAddress_1.createAddress)(req)
-                                                .then(result => { newUser(req, res, result.id); })
-                                                .catch(error => {
-                                                throw new Error(`Erreur CreateAdress Create User : ${error}`);
-                                            });
-                                        }
-                                    })
-                                        .catch(error => {
-                                        throw new Error(`Error findAddress Create User : ${error}`);
-                                    });
-                                }
-                                else {
-                                    res.status(401).json({ url: '/users/create', message: { type: "error", text: "Veuillez compléter tous les champs de votre adresse postal" } });
-                                }
+                    console.log('street : ', req.body.street);
+                    console.log('zipcode : ', req.body.zipcode);
+                    console.log('city : ', req.body.city);
+                    await connection.then(mysql => {
+                        mysql.query('SELECT * FROM users WHERE email = ?', [(0, cleanValue_1.cleanValue)(req.body.email)], (error, result) => {
+                            if (error) {
+                                throw new Error(`${error}`);
+                            }
+                            const users = Object.entries(result)[0];
+                            if (users && users.length > 0) {
+                                res.status(401).json({ url: '/users/create', message: { type: "error", text: "Problème lors de la création" } });
                             }
                             else {
-                                newUser(req, res);
+                                if (street !== '' || zipcode !== '' || city !== '') {
+                                    if (street !== '' && zipcode !== '' && city != '') {
+                                        mysql.query('SELECT * FROM addressusers WHERE street = ? AND zipcode = ? AND city = ?', [street, zipcode, city], (error, resultFindAddress) => {
+                                            if (error) {
+                                                throw new Error(`${error}`);
+                                            }
+                                            const results = Object.entries(resultFindAddress)[0];
+                                            if (results && results.length > 0) {
+                                                const addressFound = results.filter(el => typeof el !== 'string')[0];
+                                                console.log('addressFound : ', addressFound);
+                                                newUser(req, res, addressFound.id_address);
+                                            }
+                                            else {
+                                                mysql.query('INSERT INTO addressusers(street, zipcode, city) VALUES(?, ?, ?)', [street, zipcode, city], (error, resultCreateAddress) => {
+                                                    console.log('result : ', resultCreateAddress);
+                                                    if (error) {
+                                                        throw new Error(`${error}`);
+                                                    }
+                                                    const results = Object.entries(resultCreateAddress);
+                                                    if (results && results.length > 0) {
+                                                        const addressCreated = results.filter(el => el[0] === 'insertId')[0];
+                                                        console.log('addressCreated : ', addressCreated);
+                                                        newUser(req, res, addressCreated[1]);
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        res.status(401).json({ url: '/users/create', message: { type: "error", text: "Veuillez compléter tous les champs de votre adresse postal" } });
+                                    }
+                                }
+                                else {
+                                    console.log('holla');
+                                    newUser(req, res);
+                                }
                             }
-                        }
-                    })
-                        .catch(error => {
-                        throw new Error(`Error findUserByMail : ${error}`);
+                        });
                     });
                 }
                 else {
@@ -215,14 +310,14 @@ const create = (req, res) => {
     }
 };
 exports.create = create;
-const update = (req, res) => {
+const update = async (req, res) => {
     const session = req.session;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? false;
     const detailsUser = res.locals.detailsUser ?? false;
+    const connection = (0, mysql_1.connectMySQL)();
     try {
         if (req.body.email || req.body.lastname || req.body.firstname || req.body.street || req.body.zipcode || req.body.city) {
-            console.log('id update : ', req.params.id);
             if (!isConnected || roleConnected !== 1) {
                 (0, sendView_1.sendView)(res, 200, '/');
             }
@@ -239,76 +334,41 @@ const update = (req, res) => {
             const street = (0, cleanValue_1.cleanValue)(req.body.street);
             const zipcode = (0, cleanValue_1.cleanValue)(req.body.zipcode);
             const city = (0, cleanValue_1.cleanValue)(req.body.city);
-            if (street || zipcode || city) {
-                if (street !== "" && zipcode !== "" && city !== "") {
-                    (0, findAddress_1.findAddress)(req)
-                        .then(address => {
-                        if (address) {
-                            verifEmail(req, res, detailsUser, address);
-                            // if(req.body.email && detailsUser.email !== cleanValue(req.body.email)) {
-                            //     User.findOne({email: cleanValue(req.body.email)})
-                            //     .then(emailExist => {
-                            //         if(emailExist) {
-                            //             const message = "L'email saisie existe déjà dans la base de données"
-                            //             res.status(200).json({url: `/users/${detailsUser._id}/update`, message: {type: 'error', text: message}})
-                            //         }
-                            //         else {
-                            //             refreshUser(req, res, detailsUser, address._id);
-                            //         }
-                            //     })
-                            //     .catch(error => { throw new Error(`Erreur findUserByMail update user : ${error}`)}) 
-                            // } else {
-                            //     refreshUser(req, res, detailsUser, address._id);
-                            // }
-                        }
-                        else {
-                            (0, createAddress_1.createAddress)(req)
-                                .then(result => {
-                                verifEmail(req, res, detailsUser, result);
-                                // if(req.body.email && detailsUser.email !== cleanValue(req.body.email)) {   
-                                //     User.findOne({email: cleanValue(req.body.email)})
-                                //     .then(emailExist => {
-                                //         if(emailExist) {
-                                //             const message = "L'email saisie existe déjà dans la base de données";
-                                //             res.status(200).json({url: `/users/${detailsUser._id}/update`, message: {type: 'error', text: message}});
-                                //         }
-                                //         else {
-                                //             refreshUser(req, res, detailsUser, result._id);
-                                //         }
-                                //     })
-                                //     .catch(error => { throw new Error(`Erreur findUserByMail update user : ${error}`)})
-                                // } else {
-                                //     refreshUser(req, res, detailsUser, result._id);
-                                // }
-                            })
-                                .catch(error => { throw new Error(`Error createAddress Update User : ${error}`); });
-                        }
-                    })
-                        .catch(error => { throw new Error(`Error findAddress Update User : ${error}`); });
+            await connection.then(mysql => {
+                if (street || zipcode || city) {
+                    if (street !== "" && zipcode !== "" && city !== "") {
+                        mysql.query('SELECT * FROM addressusers WHERE street = ? AND zipcode = ? AND city = ?', [street, zipcode, city], (error, resultFindAddress) => {
+                            if (error) {
+                                throw new Error(`${error}`);
+                            }
+                            const results = Object.entries(resultFindAddress);
+                            if (results && results.length > 0) {
+                                const addressFound = results[0].filter(el => typeof el !== 'string')[0];
+                                verifEmail(req, res, detailsUser, addressFound.id_address);
+                            }
+                            else {
+                                mysql.query('INSERT INTO addressusers(street, zipcode, city) VALUES(?, ?, ?)', [street, zipcode, city], (error, resultCreateAddress) => {
+                                    if (error) {
+                                        throw new Error(`${error}`);
+                                    }
+                                    const results = Object.entries(resultCreateAddress);
+                                    if (results && results.length > 0) {
+                                        const addressCreated = results.filter(el => el[0] === 'insertId')[0];
+                                        verifEmail(req, res, detailsUser, addressCreated[1]);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    else {
+                        const message = "Veuillez compléter tous les champs de votre adresse postal";
+                        res.status(401).json({ url: `/users/${detailsUser.id_user}/update`, message: { type: 'error', text: message } });
+                    }
                 }
                 else {
-                    const message = "Veuillez compléter tous les champs de votre adresse postal";
-                    res.status(401).json({ url: `/users/${detailsUser._id}/update`, message: { type: 'error', text: message } });
+                    verifEmail(req, res, detailsUser);
                 }
-            }
-            else {
-                verifEmail(req, res, detailsUser);
-                // if(req.body.email && detailsUser.email !== cleanValue(req.body.email)) {
-                //     User.findOne({email: cleanValue(req.body.email)})
-                //     .then(emailExist => {
-                //         if(emailExist) {
-                //             const message = "L'email saisie existe déjà dans la base de données";
-                //             res.status(200).json({url: `/users/${detailsUser._id}/update`, message: {type: 'error', text: message}});
-                //         }
-                //         else {
-                //             refreshUser(req, res, detailsUser);
-                //         }
-                //     })
-                //     .catch(error => { throw new Error(`Erreur findUserByMail update user : ${error}`)}) 
-                // } else {
-                //     refreshUser(req, res, detailsUser);
-                // }
-            }
+            });
         }
         else {
             (0, sendView_1.sendView)(res, 200, 'update-user', { isConnected: isConnected, roleConnected: roleConnected, user: detailsUser });
@@ -320,18 +380,32 @@ const update = (req, res) => {
     }
 };
 exports.update = update;
-const remove = (req, res) => {
+const remove = async (req, res) => {
     const session = req.session;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? 0;
     const detailsUser = res.locals.detailsUser ?? false;
+    const connection = (0, mysql_1.connectMySQL)();
     try {
         if (req.method === 'DELETE') {
-            User_1.default.deleteOne({ _id: (0, cleanValue_1.cleanValue)(req.params.id) })
-                .then(() => {
-                const message = `Utilisateur supprimé avec succès`;
-                res.status(200).json({ url: `/users/`, message: { type: 'success', text: message } });
-            }).catch(error => { throw new Error(`Error deleteOne Delete User : ${error}`); });
+            await connection.then(mysql => {
+                mysql.query('DELETE FROM users WHERE id_user = ?', [(0, cleanValue_1.cleanValue)(req.params.id)], (error, result) => {
+                    if (error) {
+                        throw new Error(`${error}`);
+                    }
+                    const results = Object.entries(result);
+                    if (results && results.length > 0) {
+                        const affectedRows = results.filter(el => el[0] === 'affectedRows').map(el => el[1])[0];
+                        if (affectedRows === 1) {
+                            const message = `Utilisateur supprimé avec succès`;
+                            res.status(200).json({ url: `/users`, message: { type: 'success', text: message } });
+                        }
+                        else {
+                            res.status(401).json({ url: `/users/${(0, cleanValue_1.cleanValue)(req.params.id)}/delete`, message: { type: 'error', text: 'Error Delete User' } });
+                        }
+                    }
+                });
+            });
         }
         else {
             if (!isConnected || roleConnected !== 1 || !detailsUser) {

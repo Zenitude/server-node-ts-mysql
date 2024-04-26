@@ -1,6 +1,6 @@
-# node-express-mongodb-ts
+# node-ts-mysql
 
-REST API made with Node Express MongoDb and TypeScript
+REST API made with Node Express MySQL and TypeScript
 
 ## Commands
 
@@ -14,8 +14,11 @@ REST API made with Node Express MongoDb and TypeScript
 PORT=  
 HOST=  
 
-> \# MongoDB  
-URL_DATABASE=  
+> \# MYSQL  
+HOST_SQL=
+USER_SQL=
+PASSWORD_SQL=
+DATABASE_SQL=
 
 > \# Keys Session & Token  
 SECRET_KEY_SESSION=  

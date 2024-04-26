@@ -29,6 +29,7 @@ interface AddressUserModel extends Document {
 }
 
 interface UserModel extends Document {
+    id_user: number;
     lastname: string;
     firstname: string;
     email: string;

@@ -1,36 +1,50 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRole = void 0;
-const User_1 = __importDefault(require("../../../models/User"));
+const mysql_1 = require("../../database/mysql");
 const path_1 = require("path");
 const getRole = (req, res, next) => {
     const session = req.session;
     const isConnected = session.isConnected ?? false;
     const roleConnected = res.locals.roleUser ?? false;
+    const connection = (0, mysql_1.connectMySQL)();
     try {
         const token = session.decodedToken ?? false;
         if (!token) {
-            throw new Error(`Error User not found`);
+            session.isConnected = false;
+            res.locals.roleUser = 0;
+            next();
         }
         else {
-            if (!token.userId) {
-                throw new Error(`Erreur Token userId`);
-            }
-            User_1.default.findOne({ _id: token.userId })
-                .then(user => {
-                if (user) {
-                    res.locals.roleUser = user.role;
-                    next();
-                }
-                else {
-                    throw new Error(`Error User not found`);
-                }
-            }).catch(error => {
-                throw new Error(`Error find User GetRole : ${error}`);
+            connection.then(mysql => {
+                mysql?.query(`SELECT * FROM users WHERE id_user = ?`, [token.userId], (error, result) => {
+                    if (error) {
+                        throw new Error(`${error}`);
+                    }
+                    const results = Object.entries(result);
+                    if (results) {
+                        const user = results.map(el => el[1])[0];
+                        res.locals.roleUser = user.role;
+                        next();
+                    }
+                    else {
+                        session.isConnected = false;
+                        res.locals.roleUser = 0;
+                        next();
+                    }
+                });
             });
+            // User.findOne({_id: token.userId})
+            // .then(user => {
+            //     if(user) {
+            //         res.locals.roleUser = user.role;
+            //         next();
+            //     } else {
+            //         throw new Error(`Error User not found`);
+            //     }
+            // }).catch(error => { 
+            //     throw new Error(`Error find User GetRole : ${error}`)
+            // });
         }
     }
     catch (error) {
