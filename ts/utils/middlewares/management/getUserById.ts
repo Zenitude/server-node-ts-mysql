@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { connectMySQL } from "../../database/mysql";
 import { cleanValue } from "../../functions/cleanValue";
 import { CustomType } from "../../types/types";
-import { sendView } from "../../functions/sendView";
+import { join } from "path";
 
 export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const session = req.session as CustomType;
@@ -31,6 +31,6 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
         })
     } catch(error) {
         console.log(`Error GetUserById : ${error}`);
-        sendView(res, 404, "error", { isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text:"Get User"}});
+        res.status(500).render(join(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text:"Get User"}})
     }
 }

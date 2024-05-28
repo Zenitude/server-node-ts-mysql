@@ -26,6 +26,6 @@ export const getToken = (req: Request, res: Response, next: NextFunction) => {
     }
     catch(error) {
         console.log(`${error}`);
-        res.status(401).render(join(__dirname, "../../views/errors/error-401.ejs"), {isConnected: isConnected, roleConnected: roleConnected})
+        res.status(500).render(join(__dirname, "../../views/errors/error-500.ejs"), {isConnected: isConnected, roleConnected: roleConnected, message: {type:'error', text:'Token'}})
     }
 }

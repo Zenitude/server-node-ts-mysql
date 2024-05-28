@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { sendView } from "../utils/functions/sendView";
+import { join } from 'path';
 import { CustomType } from '../utils/types/types';
 
 
@@ -10,9 +10,9 @@ export const contact = async (req: Request, res: Response, next: NextFunction) =
     const roleConnected = res.locals.roleUser ?? false;
 
     try {
-        sendView(res, 200, 'contact', { isConnected: isConnected, roleConnected : roleConnected, successSend: ""});
+        res.status(200).render(join(__dirname, "../views/contact.ejs"), { isConnected: isConnected, roleConnected: roleConnected})
     } catch(error) {
         console.log(`${error}`);
-        sendView(res, 401, 'contact', {isConnected: isConnected, roleConnected : roleConnected, successSend: "", error: "Erreur lors de l'envoie du message" })
+        res.status(500).render(join(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: {type: 'error', text: 'Contact'}})
     }
 }

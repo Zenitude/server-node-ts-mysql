@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { join } from "path";
 import { verifInputs } from "../utils/functions/verifInput";
-import { sendView } from "../utils/functions/sendView";
 import { cleanValue } from "../utils/functions/cleanValue";
 import { CustomType, OptionCookie } from "../utils/types/types";
 import jwt from "jsonwebtoken";
@@ -121,7 +120,7 @@ export const signin = (req: Request, res: Response) => {
         }
     } catch(error) {
         console.log(`Erreur connexion : ${error}`);
-        sendView(res, 500, "")
+        res.status(500).render(join(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: false})
     }
 }
 
@@ -133,7 +132,7 @@ export const signup = (req: Request, res: Response) => {
 
     try {
         if(req.body.email || req.body.lastname || req.body.firstname || req.body.password || req.body.confirm || req.body.street || req.body.zipcode || req.body.city) {
-            if(isConnected) { sendView(res, 200, '/'); }
+            if(isConnected) { res.status(401).redirect('/'); }
             if(req.body.email && req.body.password && req.body.confirm) {
                 if(req.body.password === req.body.confirm) {
                     const inputs = [
@@ -203,25 +202,25 @@ export const signup = (req: Request, res: Response) => {
                     })
                 } else {
                     if(isConnected) {
-                        sendView(res, 200, "/");
+                        res.status(401).redirect('/');
                     } else {
-                        sendView(res, 200, 'signup', {isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text: "Le mot de passe et sa confirmation ne sont pas identique"}});
+                        res.status(200).render(join(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text: "Le mot de passe et sa confirmation ne sont pas identique"}})
                     }
                 }
             } else {
-                sendView(res, 200, 'signup', {isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text:"Veuillez remplir les champs obligatoires"}});
+                res.status(200).render(join(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: {type: "error", text: "Veuillez remplir les champs obligatoires"}})
             }
             
         } else {
             if(isConnected) {
-                sendView(res, 200, '/');
+                res.status(401).redirect('/');
             } else {
-                sendView(res, 200, 'signup', {isConnected: isConnected, roleConnected: roleConnected});
+                res.status(200).render(join(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected})
             }
         }
     } catch(error) {
         console.log(error);
-        sendView(res, 401, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: {type: 'error', text:'Inscription'}});
+        res.status(500).render(join(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: {type: 'error', text:'Inscription'}})
     }
 }
 
