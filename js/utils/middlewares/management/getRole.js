@@ -34,23 +34,11 @@ const getRole = (req, res, next) => {
                     }
                 });
             });
-            // User.findOne({_id: token.userId})
-            // .then(user => {
-            //     if(user) {
-            //         res.locals.roleUser = user.role;
-            //         next();
-            //     } else {
-            //         throw new Error(`Error User not found`);
-            //     }
-            // }).catch(error => { 
-            //     throw new Error(`Error find User GetRole : ${error}`)
-            // });
         }
     }
     catch (error) {
         console.log(`${error}`);
-        res.status(401).render((0, path_1.join)(__dirname, "../../views/errors/error-401.ejs"), { isConnected: isConnected, roleConnected: roleConnected });
-        //sendView(res, 401, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: {type: 'error', text: 'Erreur Role'}})
+        res.status(500).render((0, path_1.join)(__dirname, "../../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: 'error', text: 'Erreur Role' } });
     }
 };
 exports.getRole = getRole;

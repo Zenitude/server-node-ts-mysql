@@ -9,7 +9,6 @@ const path_1 = require("path");
 const validator_1 = require("validator");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const verifInput_1 = require("../utils/functions/verifInput");
-const sendView_1 = require("../utils/functions/sendView");
 const cleanValue_1 = require("../utils/functions/cleanValue");
 const newUser = async (req, res, idAddress) => {
     const connection = (0, mysql_1.connectMySQL)();
@@ -158,7 +157,7 @@ const list = async (req, res) => {
     const connection = (0, mysql_1.connectMySQL)();
     try {
         if (roleConnected !== 1) {
-            (0, sendView_1.sendView)(res, 401, "error", { isConnected: isConnected, roleConnected: roleConnected });
+            res.status(401).render((0, path_1.join)(__dirname, "../views/errors/error-401.ejs"), { isConnected: isConnected, roleConnected: roleConnected });
         }
         else {
             await connection.then(mysql => {
@@ -169,11 +168,11 @@ const list = async (req, res) => {
                     const results = Object.entries(result);
                     if (results) {
                         const users = results.map(el => el[1]);
-                        (0, sendView_1.sendView)(res, 200, 'list-user', { isConnected: isConnected, roleConnected: roleConnected, users: users });
+                        res.status(200).render((0, path_1.join)(__dirname, "../views/managment/users/list-user.ejs"), { isConnected: isConnected, roleConnected: roleConnected, users: users });
                     }
                     else {
                         const users = [];
-                        (0, sendView_1.sendView)(res, 200, 'list-user', { isConnected: isConnected, roleConnected: roleConnected, users: users });
+                        res.status(200).render((0, path_1.join)(__dirname, "../views/managment/users/list-user.ejs"), { isConnected: isConnected, roleConnected: roleConnected, users: users });
                     }
                 });
             });
@@ -181,7 +180,7 @@ const list = async (req, res) => {
     }
     catch (error) {
         console.log(`Erreur List Users : ${error}`);
-        (0, sendView_1.sendView)(res, 401, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: { type: 'error', text: 'List Users' } });
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: 'error', text: 'List Users' } });
     }
 };
 exports.list = list;
@@ -191,17 +190,17 @@ const details = (req, res) => {
     const roleConnected = res.locals.roleUser ?? false;
     try {
         if (roleConnected !== 1) {
-            (0, sendView_1.sendView)(res, 401, "error", { isConnected: isConnected, roleConnected: roleConnected });
+            res.status(401).render((0, path_1.join)(__dirname, "../views/errors/error-401.ejs"), { isConnected: isConnected, roleConnected: roleConnected });
         }
         else {
             const user = res.locals.detailsUser ?? false;
             console.log('details : ', user);
-            (0, sendView_1.sendView)(res, 200, 'details-user', { user: user, isConnected: isConnected, roleConnected: roleConnected });
+            res.status(200).render((0, path_1.join)(__dirname, "../views/management/users/details-user.ejs"), { isConnected: isConnected, roleConnected: roleConnected, user: user });
         }
     }
     catch (error) {
         console.log(`Erreur details User : ${error}`);
-        (0, sendView_1.sendView)(res, 500, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Détails User" } });
+        res.status(500).render((0, path_1.join)(__dirname, ""), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Détails User" } });
     }
 };
 exports.details = details;
@@ -297,16 +296,16 @@ const create = async (req, res) => {
         }
         else {
             if (!isConnected || roleConnected !== 1) {
-                (0, sendView_1.sendView)(res, 200, '/');
+                res.status(401).redirect('/');
             }
             else {
-                (0, sendView_1.sendView)(res, 200, 'create-user', { isConnected: isConnected, roleConnected: roleConnected });
+                res.status(200).render((0, path_1.join)(__dirname, "../views/management/users/create-user.ejs"), { isConnected: isConnected, roleConnected: roleConnected });
             }
         }
     }
     catch (error) {
         console.log(`${error}`);
-        (0, sendView_1.sendView)(res, 500, 'create-user', { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Erreur lors de la création d'un utilisateur" } });
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Erreur lors de la création d'un utilisateur" } });
     }
 };
 exports.create = create;
@@ -319,7 +318,7 @@ const update = async (req, res) => {
     try {
         if (req.body.email || req.body.lastname || req.body.firstname || req.body.street || req.body.zipcode || req.body.city) {
             if (!isConnected || roleConnected !== 1) {
-                (0, sendView_1.sendView)(res, 200, '/');
+                res.status(401).redirect('/');
             }
             const inputs = [
                 { type: 'string', name: 'lastname', message: '' },
@@ -371,12 +370,12 @@ const update = async (req, res) => {
             });
         }
         else {
-            (0, sendView_1.sendView)(res, 200, 'update-user', { isConnected: isConnected, roleConnected: roleConnected, user: detailsUser });
+            res.status(200).render((0, path_1.join)(__dirname, "../views/management/users/update-user.ejs"), { isConnected: isConnected, roleConnected: roleConnected, user: detailsUser });
         }
     }
     catch (error) {
         console.log(`${error}`);
-        (0, sendView_1.sendView)(res, 401, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: 'Update User' } });
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: 'Update User' } });
     }
 };
 exports.update = update;
@@ -418,7 +417,7 @@ const remove = async (req, res) => {
     }
     catch (error) {
         console.log(`${error}`);
-        res.status(200).render((0, path_1.join)(__dirname, `../views/management/users/delete-user.ejs`), { isConnected: isConnected, roleConnected: roleConnected, user: detailsUser, message: { type: 'error', text: 'Erreur lors de la tentative de suppression' } });
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: 'Delete User' } });
     }
 };
 exports.remove = remove;

@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.signup = exports.signin = void 0;
 const path_1 = require("path");
 const verifInput_1 = require("../utils/functions/verifInput");
-const sendView_1 = require("../utils/functions/sendView");
 const cleanValue_1 = require("../utils/functions/cleanValue");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -104,7 +103,7 @@ const signin = (req, res) => {
     }
     catch (error) {
         console.log(`Erreur connexion : ${error}`);
-        (0, sendView_1.sendView)(res, 500, "");
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: false });
     }
 };
 exports.signin = signin;
@@ -116,7 +115,7 @@ const signup = (req, res) => {
     try {
         if (req.body.email || req.body.lastname || req.body.firstname || req.body.password || req.body.confirm || req.body.street || req.body.zipcode || req.body.city) {
             if (isConnected) {
-                (0, sendView_1.sendView)(res, 200, '/');
+                res.status(401).redirect('/');
             }
             if (req.body.email && req.body.password && req.body.confirm) {
                 if (req.body.password === req.body.confirm) {
@@ -184,29 +183,29 @@ const signup = (req, res) => {
                 }
                 else {
                     if (isConnected) {
-                        (0, sendView_1.sendView)(res, 200, "/");
+                        res.status(401).redirect('/');
                     }
                     else {
-                        (0, sendView_1.sendView)(res, 200, 'signup', { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Le mot de passe et sa confirmation ne sont pas identique" } });
+                        res.status(200).render((0, path_1.join)(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Le mot de passe et sa confirmation ne sont pas identique" } });
                     }
                 }
             }
             else {
-                (0, sendView_1.sendView)(res, 200, 'signup', { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Veuillez remplir les champs obligatoires" } });
+                res.status(200).render((0, path_1.join)(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: "error", text: "Veuillez remplir les champs obligatoires" } });
             }
         }
         else {
             if (isConnected) {
-                (0, sendView_1.sendView)(res, 200, '/');
+                res.status(401).redirect('/');
             }
             else {
-                (0, sendView_1.sendView)(res, 200, 'signup', { isConnected: isConnected, roleConnected: roleConnected });
+                res.status(200).render((0, path_1.join)(__dirname, "../views/sign/signup.ejs"), { isConnected: isConnected, roleConnected: roleConnected });
             }
         }
     }
     catch (error) {
         console.log(error);
-        (0, sendView_1.sendView)(res, 401, 'error', { isConnected: isConnected, roleConnected: roleConnected, message: { type: 'error', text: 'Inscription' } });
+        res.status(500).render((0, path_1.join)(__dirname, "../views/errors/error-500.ejs"), { isConnected: isConnected, roleConnected: roleConnected, message: { type: 'error', text: 'Inscription' } });
     }
 };
 exports.signup = signup;
